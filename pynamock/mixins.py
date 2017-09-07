@@ -41,12 +41,18 @@ class TestPynamoMixin(object):
         import pynamodb.connection
 
         def save_override(self, *args, **kwargs):
+            """
+            Call the original save.
+            If it won't raise error, put it into to-be-deleted-after list.
+            """
+            result = original_save(self, *args, **kwargs)
+
             if cls.class_data:
                 cls._class_items.append(self)
             else:
                 cls._test_items.append(self)
 
-            return original_save(self, *args, **kwargs)
+            return result
 
         mock_connection = cls.get_testing_dynamo(os.environ.get('MOCK_DYNAMODB'))
         pynamodb.connection.table.Connection = mock_connection
